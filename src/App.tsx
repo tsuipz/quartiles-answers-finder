@@ -1,35 +1,62 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from 'react';
+import './App.scss';
+import GridLayout from './components/GridLayout';
+import WordCombinations from './components/WordCombinations';
+import Results from './components/Results';
+import { generateAllCombinations } from './utils/generateCombinations';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState, AppDispatch } from './stores';
+import { setAllCombinations, setCorrectWords, setIncorrectWords } from './stores/gridSlice';
+import { fetchWordValidity } from './api';
+import { Box, Button, Typography } from '@mui/material';
 
-function App() {
-  const [count, setCount] = useState(0)
+const App: React.FC = () => {
+	const dispatch = useDispatch<AppDispatch>();
+	const grid = useSelector((state: RootState) => state.grid.grid);
+	const combinations = useSelector((state: RootState) => state.grid.allCombinations);
 
-  return (
-    <>
-      <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+	const handleGenerate = () => {
+		const allCombinations = generateAllCombinations(grid);
+		const combinationsArray = Array.from(allCombinations);
+		const wordStates = combinationsArray.map((word, index) => ({ id: index, word, isSelected: false, isHidden: false }));
+		dispatch(setAllCombinations(wordStates));
+	};
 
-export default App
+	const handleSolve = async () => {
+		const selectedWords = combinations.filter((combo) => combo.isSelected).map((combo) => combo.word);
+
+		const correctWords: string[] = [];
+		const incorrectWords: string[] = [];
+
+		for (const word of selectedWords) {
+			const isValid = await fetchWordValidity(word);
+			if (isValid) {
+				correctWords.push(word);
+			} else {
+				incorrectWords.push(word);
+			}
+		}
+
+		dispatch(setCorrectWords(correctWords));
+		dispatch(setIncorrectWords(incorrectWords));
+	};
+
+	return (
+		<Box className='app-container' textAlign='center'>
+			<Typography variant='h3' gutterBottom>
+				Quartiles Game Solver
+			</Typography>
+			<GridLayout />
+			<Button variant='contained' onClick={handleGenerate} sx={{ mt: 4 }}>
+				Generate Combinations
+			</Button>
+			<Results />
+			<Button variant='contained' onClick={handleSolve} sx={{ mt: 4 }}>
+				Solve
+			</Button>
+			<WordCombinations />
+		</Box>
+	);
+};
+
+export default App;

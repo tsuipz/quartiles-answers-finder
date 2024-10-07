@@ -1,0 +1,19 @@
+.app-container {
+	// Use TailwindCSS for utility classes
+	@apply bg-gray-200 min-h-screen flex flex-col items-center p-6;
+
+	// SCSS for more custom and complex styling
+	h1 {
+		@apply text-3xl font-bold mb-4; // TailwindCSS utility classes inside SCSS
+
+		color: #333; // Additional custom SCSS styles
+	}
+
+	// button {
+	// 	@apply bg-blue-500 text-white px-4 py-2 rounded mt-4; // Tailwind utility for styling the button
+
+	// 	&:hover {
+	// 		@apply bg-blue-600; // Darker blue on hover
+	// 	}
+	// }
+}
